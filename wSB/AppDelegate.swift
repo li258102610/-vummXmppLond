@@ -2,21 +2,66 @@
 //  AppDelegate.swift
 //  wSB
 //
-//  Created by 张翔 on 15/11/15.
-//  Copyright © 2015年 张翔. All rights reserved.
+//  Created by 李聪 on 15/11/15.
+//  Copyright © 2015年 李聪. All rights reserved.
 //
 
 import UIKit
 
+protocol DataRefreshDelegate{
+    func dataRefresh()
+}
+
+
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, XMPPLoginDelegate {
 
     var window: UIWindow?
+    
+     var dataRefresh_delegate : DataRefreshDelegate?
 
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        //打印沙箱路径
+        let paths  = NSSearchPathForDirectoriesInDomains(NSSearchPathDirectory.DocumentDirectory, NSSearchPathDomainMask.UserDomainMask, true)
+        NSLog("%@", paths)
+        
+        //从沙盒中取出用户 信息
+        UserInfo.getInstance().loadUserInfoFromSanbox()
+        
+        //直接登录
+        if (UserInfo.getInstance().loginState != LoginState.Offline) {
+            
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            let vc = storyboard.instantiateInitialViewController() as? UITabBarController
+            self.window!.rootViewController = vc
+            MBProgressHUD.showMessage("读取数据...", toView: self.window!.rootViewController!.view, bgColor: loginProgressHUD_BgColor)
+            //自动登陆
+            XMPPManager.getInstance().userLogin(self)
+            
+            let naVc = vc?.viewControllers![0] as? UINavigationController
+            let contactsVc = naVc?.topViewController as? ContactsTableViewController
+            self.dataRefresh_delegate = contactsVc
+            
+            //注册本地通知
+            let settings = UIUserNotificationSettings(forTypes: UIUserNotificationType.Badge, categories: nil)
+            application.registerUserNotificationSettings(settings)
+        }
+
         return true
+    }
+    
+    func loginSuccess() {
+        MBProgressHUD.hideHUDForView(self.window?.rootViewController?.view)
+        //登录成功刷新界面
+        dataRefresh_delegate?.dataRefresh()
+    }
+    func loginFailure() {
+        MBProgressHUD.hideHUDForView(self.window?.rootViewController?.view)
+    }
+    func loginNetError() {
+        MBProgressHUD.hideHUDForView(self.window?.rootViewController?.view)
     }
 
     func applicationWillResignActive(application: UIApplication) {

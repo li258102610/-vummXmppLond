@@ -2,8 +2,8 @@
 //  wSBTests.swift
 //  wSBTests
 //
-//  Created by 张翔 on 15/11/15.
-//  Copyright © 2015年 张翔. All rights reserved.
+//  Created by 李聪 on 15/11/15.
+//  Copyright © 2015年 李聪. All rights reserved.
 //
 
 import XCTest
